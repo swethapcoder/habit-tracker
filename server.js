@@ -15,6 +15,7 @@ const ScheduledTask = require('./models/ScheduledTask');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const MONGO_URI = process.env.MONGO_URI;
 const SALT_ROUNDS = 10;
 
 // ----------------- MIDDLEWARE -----------------
@@ -22,23 +23,17 @@ app.use(cors());
 app.use(express.json());
 
 // ----------------- MONGODB CONNECTION -----------------
-if (!process.env.MONGO_URI) {
+if (!MONGO_URI) {
   console.error("❌ MONGO_URI is not defined in environment variables");
   process.exit(1);
 }
 
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(MONGO_URI)
   .then(() => console.log('💾 MongoDB connected (nosql)'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// ----------------- STATIC FILES & HOMEPAGE -----------------
-// Serve static files from 'public' folder
+// ----------------- STATIC FILES -----------------
 app.use(express.static(path.join(__dirname, 'public')));
-
-// ⚠️ THIS IS THE ONLY HOMEPAGE ROUTE - NO OTHER app.get('/') ANYWHERE
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
 
 // ----------------- AUTH ROUTES -----------------
 
