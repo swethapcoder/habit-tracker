@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Habit Tracker Calendar</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: #eff7fb;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background-color: #fff;
+      padding: 20px;
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .sidebar h3 {
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      background: #f6fafd;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn.active {
+      background: #1ea7fd;
+      color: #fff;
+    }
+
+    /* Main */
+    .main {
+      flex: 1;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .profile {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      background: #d9d9d9;
+    }
+
+    /* Calendar Grid */
+    #calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .day {
+      background: #fff;
+      text-align: center;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      min-height: 70px;
+      position: relative;
+      transition: 0.2s ease;
+    }
+
+    .day:hover {
+      background: #e6f3ff;
+    }
+
+    .habit-tag {
+      display: inline-block;
+      background: #1ea7fd;
+      color: white;
+      font-size: 10px;
+      padding: 2px 4px;
+      border-radius: 6px;
+      margin: 2px;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal {
+      background: #fff;
+      padding: 20px;
+      width: 300px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .close-btn {
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: #1ea7fd;
+      border: none;
+      color: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    #monthYear {
+      text-align: center;
+      margin-top: 15px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .month-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .nav-btn {
+      background: #1ea7fd;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .nav-btn:hover {
+      background: #007ad6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h3>HABIT TRACKER</h3>
+      <button class="btn">All Habits</button>
+      <button class="btn">Daily Habits</button>
+      <button class="btn">Custom Date Habits</button>
+      <button class="btn active">Calendar</button>
+    </div>
+
+    <!-- Main Section -->
+    <div class="main">
+      <div class="header">
+        <h2>Calendar</h2>
+        <div class="profile"></div>
+      </div>
+
+      <!-- Calendar Controls -->
+      <div class="month-controls">
+        <button class="nav-btn" id="prev-month">◀</button>
+        <div id="monthYear"></div>
+        <button class="nav-btn" id="next-month">▶</button>
+      </div>
+
+      <!-- Calendar -->
+      <div id="calendar"></div>
+
+      <!-- Selected Date & Habits -->
+      <h3 id="habit-title"></h3>
+      <div id="habit-list"></div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="habit-modal" class="modal-overlay">
+    <div class="modal">
+      <h3 id="habit-name"></h3>
+      <p>Progress: 70% ✅</p>
+      <button id="close-modal" class="close-btn">Close</button>
+    </div>
+  </div>
+
+  <script>
+    const habits = [
+      { id: 1, name: "Evening Walk", type: "daily" },
+      { id: 2, name: "Yoga", type: "daily" },
+      { id: 3, name: "Assignment Submission", type: "custom", date: "2025-11-04" },
+      { id: 4, name: "Project Review", type: "custom", date: "2025-11-24" },
+    ];
+
+    const calendarEl = document.getElementById("calendar");
+    const habitTitle = document.getElementById("habit-title");
+    const habitList = document.getElementById("habit-list");
+    const modal = document.getElementById("habit-modal");
+    const habitNameEl = document.getElementById("habit-name");
+    const closeModal = document.getElementById("close-modal");
+    const monthYearEl = document.getElementById("monthYear");
+
+    const prevMonthBtn = document.getElementById("prev-month");
+    const nextMonthBtn = document.getElementById("next-month");
+
+    let currentDate = new Date();
+
+    function updateMonthYearDisplay() {
+      const options = { month: "long", year: "numeric" };
+      monthYearEl.textContent = currentDate.toLocaleDateString("en-US", options);
+    }
+
+    function generateCalendar(date) {
+      calendarEl.innerHTML = "";
+      const year = date.getFullYear();
+      const month = date.getMonth();
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const lastDate = new Date(year, month + 1, 0).getDate();
+
+      const monthDays = [];
+
+      for (let i = 0; i < firstDay; i++) monthDays.push("");
+      for (let d = 1; d <= lastDate; d++) monthDays.push(d);
+
+      monthDays.forEach((day) => {
+        const dayEl = document.createElement("div");
+        dayEl.classList.add("day");
+
+        if (day) {
+          dayEl.innerHTML = `<strong>${day}</strong>`;
+          const fullDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+          const habitsToday = getHabitsForDate(fullDate);
+
+          habitsToday.slice(0, 2).forEach((h) => {
+            const tag = document.createElement("span");
+            tag.classList.add("habit-tag");
+            tag.textContent = h.name.length > 8 ? h.name.slice(0, 8) + "..." : h.name;
+            dayEl.appendChild(tag);
+          });
+
+          dayEl.addEventListener("click", () => showHabits(fullDate));
+        }
+
+        calendarEl.appendChild(dayEl);
+      });
+    }
+
+    function getHabitsForDate(dateStr) {
+      const daily = habits.filter((h) => h.type === "daily");
+      const custom = habits.filter((h) => h.type === "custom" && h.date === dateStr);
+      return [...daily, ...custom];
+    }
+
+    function showHabits(dateStr) {
+      const date = new Date(dateStr);
+      const list = getHabitsForDate(dateStr);
+      habitTitle.textContent = `Habits on ${date.toDateString()}`;
+      habitList.innerHTML = "";
+
+      if (list.length === 0) {
+        habitList.innerHTML = "<p>No habits scheduled.</p>";
+      } else {
+        list.forEach((h) => {
+          const item = document.createElement("div");
+          item.className = "day";
+          item.style.textAlign = "left";
+          item.textContent = h.name;
+          item.onclick = () => openModal(h);
+          habitList.appendChild(item);
+        });
+      }
+    }
+
+    function openModal(habit) {
+      habitNameEl.textContent = habit.name;
+      modal.style.display = "flex";
+    }
+
+    closeModal.onclick = () => {
+      modal.style.display = "none";
+    };
+
+    prevMonthBtn.addEventListener("click", () => {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+      updateMonthYearDisplay();
+      generateCalendar(currentDate);
+    });
+
+    nextMonthBtn.addEventListener("click", () => {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+      updateMonthYearDisplay();
+      generateCalendar(currentDate);
+    });
+
+    updateMonthYearDisplay();
+    generateCalendar(currentDate);
+
+    const today = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(currentDate.getDate()).padStart(2, "0")}`;
+    showHabits(today);
+  </script>
+</body>
+</html>
