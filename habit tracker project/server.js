@@ -13,7 +13,7 @@ const Habit = require('./models/Habit');
 const ScheduledTask = require('./models/ScheduledTask');
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 const SALT_ROUNDS = 10;
 
