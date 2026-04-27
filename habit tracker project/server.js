@@ -56,7 +56,9 @@ app.post('/api/signup', async (req, res) => {
     res.status(500).json({ message: 'Signup failed' });
   }
 });
-
+app.get('/', (req, res) => {
+  res.send('✅ Habit Tracker Backend is Running');
+});
 // Login
 app.post('/api/login', async (req, res) => {
   try {
