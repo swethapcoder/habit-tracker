@@ -22,8 +22,6 @@ app.use(cors());
 app.use(express.json());
 
 // ----------------- MONGODB CONNECTION -----------------
-const MONGO_URI = process.env.MONGO_URI;
-
 if (!MONGO_URI) {
   console.error("❌ MONGO_URI is not defined in environment variables");
   process.exit(1);
@@ -237,6 +235,7 @@ app.get('/api/dashboard', async (req, res) => {
     res.status(500).json({ message: 'Failed to get dashboard items' });
   }
 });
+
 // ----------------- PROFILE ROUTES -----------------
 const UserProfile = require('./models/UserProfile');
 
@@ -277,7 +276,6 @@ app.post('/api/profile', async (req, res) => {
     res.status(500).json({ message: 'Failed to save profile' });
   }
 });
-
 
 // ----------------- START SERVER -----------------
 app.listen(PORT, () => {
