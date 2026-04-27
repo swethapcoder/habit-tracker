@@ -35,7 +35,7 @@ mongoose.connect(process.env.MONGO_URI)
 // Serve static files from 'public' folder
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Homepage route - serves index.html
+// ⚠️ THIS IS THE ONLY HOMEPAGE ROUTE - NO OTHER app.get('/') ANYWHERE
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -73,7 +73,6 @@ app.post('/api/login', async (req, res) => {
     if (!username || !password)
       return res.status(400).json({ message: 'Missing fields' });
 
-    // Search by BOTH username AND email
     const user = await User.findOne({
       $or: [
         { username: username },
@@ -97,7 +96,6 @@ app.post('/api/login', async (req, res) => {
 
 // ----------------- HABITS ROUTES -----------------
 
-// Get all habits for user
 app.get('/api/habits', async (req, res) => {
   try {
     const { userId } = req.query;
@@ -111,7 +109,6 @@ app.get('/api/habits', async (req, res) => {
   }
 });
 
-// Create new habit
 app.post('/api/habits', async (req, res) => {
   try {
     const { userId, name } = req.body;
@@ -127,7 +124,6 @@ app.post('/api/habits', async (req, res) => {
   }
 });
 
-// Update habit
 app.put('/api/habits/:id', async (req, res) => {
   try {
     const habit = await Habit.findByIdAndUpdate(req.params.id, req.body, {
@@ -140,7 +136,6 @@ app.put('/api/habits/:id', async (req, res) => {
   }
 });
 
-// Delete habit
 app.delete('/api/habits/:id', async (req, res) => {
   try {
     await Habit.findByIdAndDelete(req.params.id);
@@ -153,7 +148,6 @@ app.delete('/api/habits/:id', async (req, res) => {
 
 // ----------------- SCHEDULED TASK ROUTES -----------------
 
-// Get all tasks for user
 app.get('/api/scheduled-tasks', async (req, res) => {
   try {
     const { userId } = req.query;
@@ -167,7 +161,6 @@ app.get('/api/scheduled-tasks', async (req, res) => {
   }
 });
 
-// Create new task
 app.post('/api/scheduled-tasks', async (req, res) => {
   try {
     const { userId, name, date, time } = req.body;
@@ -183,7 +176,6 @@ app.post('/api/scheduled-tasks', async (req, res) => {
   }
 });
 
-// Update task
 app.put('/api/scheduled-tasks/:id', async (req, res) => {
   try {
     const task = await ScheduledTask.findByIdAndUpdate(req.params.id, req.body, {
@@ -196,7 +188,6 @@ app.put('/api/scheduled-tasks/:id', async (req, res) => {
   }
 });
 
-// Delete task
 app.delete('/api/scheduled-tasks/:id', async (req, res) => {
   try {
     await ScheduledTask.findByIdAndDelete(req.params.id);
@@ -207,7 +198,7 @@ app.delete('/api/scheduled-tasks/:id', async (req, res) => {
   }
 });
 
-// ----------------- DASHBOARD: Today's Items -----------------
+// ----------------- DASHBOARD -----------------
 app.get('/api/dashboard', async (req, res) => {
   try {
     const { userId } = req.query;
@@ -221,7 +212,6 @@ app.get('/api/dashboard', async (req, res) => {
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const todayDay = dayNames[today.getDay()];
 
-    // Get daily + weekly habits
     const habits = await Habit.find({
       userId,
       completed: false,
@@ -231,7 +221,6 @@ app.get('/api/dashboard', async (req, res) => {
       ],
     }).sort({ time: 1 });
 
-    // Get tasks for today
     const tasks = await ScheduledTask.find({
       userId,
       date: todayDate,
@@ -248,7 +237,6 @@ app.get('/api/dashboard', async (req, res) => {
 // ----------------- PROFILE ROUTES -----------------
 const UserProfile = require('./models/UserProfile');
 
-// Get profile for a user
 app.get('/api/profile', async (req, res) => {
   try {
     const { userId } = req.query;
@@ -264,7 +252,6 @@ app.get('/api/profile', async (req, res) => {
   }
 });
 
-// Create or update profile
 app.post('/api/profile', async (req, res) => {
   try {
     const { userId, username, fullName, dob, passion, email, phone, profilePic } = req.body;
